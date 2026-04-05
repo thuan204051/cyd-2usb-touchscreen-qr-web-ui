@@ -4,15 +4,6 @@
 #include "lvgl_port.h"
 #include "wifi_manager.h"
 #include <time.h>
-/**
- * NTP Service
- * 
- * Only handles time synchronization — does not manage WiFi.
- * Call ntp_begin() once in setup().
- * Call ntp_update() in loop() or a periodic task.
- * 
- * WiFi must be connected beforehand from the outside (start_wifi_connect / manual).
- */
 
 // ── Config ──────────────────
 #ifndef NTP_GMT_OFFSET_SEC

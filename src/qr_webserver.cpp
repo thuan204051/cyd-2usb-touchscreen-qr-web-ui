@@ -4,7 +4,7 @@
 #include <ESPmDNS.h>
 #include <LittleFS.h>
 
-const char* mdnsName = "esp32";
+const char* mdnsName = "esp32";//esơ32.local
 lv_obj_t*   qr_obj   = NULL;
 
 WebServer server(80);
