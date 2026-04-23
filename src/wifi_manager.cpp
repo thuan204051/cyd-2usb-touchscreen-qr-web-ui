@@ -69,11 +69,24 @@ void update_wifi_list_ui(void *scan_result)
  Results are returned via lv_async_call to ensure thread-safety with LVGL.
 */
 void wifi_scan_task(void *pvParameters)
-{
-    WiFi.mode(WIFI_STA);
-    //WiFi.disconnect();
-    vTaskDelay(pdMS_TO_TICKS(100));
-    int n = WiFi.scanNetworks();
+{   
+    /** Skip WiFi.mode(WIFI_STA) when already connected to avoid resetting connection */
+    if (WiFi.status() != WL_CONNECTED) {
+        WiFi.mode(WIFI_STA);
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+    WiFi.scanNetworks(true); // async
+    // Polling loop to wait for scan result (max 10s)
+    int n = WIFI_SCAN_RUNNING;
+    int waited = 0;
+    while (n == WIFI_SCAN_RUNNING && waited < 100) {
+        vTaskDelay(pdMS_TO_TICKS(100));
+        n = WiFi.scanComplete();
+        waited++;
+    }
+
+    if (n < 0) n = 0; // WIFI_SCAN_FAILED
+
     lv_async_call(update_wifi_list_ui, (void *)(intptr_t)n);
     vTaskDelete(NULL);
 }
@@ -123,7 +136,7 @@ void start_wifi_connect(const char *ssid, const char *password)
         }, (void *)(intptr_t)connected);
 
         vTaskDelete(NULL);
-    }, "wifi_connect", 4096, NULL, 1, NULL);
+    }, "wifi_connect", 8192, NULL, 1, NULL);
 
     save_wifi_credentials(ssid, password);
     init_server();
