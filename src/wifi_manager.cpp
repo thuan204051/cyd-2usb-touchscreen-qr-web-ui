@@ -46,6 +46,7 @@ void update_wifi_list_ui(void *scan_result)
 {
     int n = (int)(intptr_t)scan_result;
     lv_label_set_text(ui_Label6, LV_SYMBOL_OK " Completed");
+    lv_obj_clean(ui_WifiList);
 
     if (wifi_list) { lv_obj_delete(wifi_list); wifi_list = NULL; }
 
@@ -57,12 +58,17 @@ void update_wifi_list_ui(void *scan_result)
         lv_list_add_text(wifi_list, "No WiFi found");
         return;
     }
+
+    int display_count = (n > 15) ? 15 : n;
+
     lv_list_add_text(wifi_list, "Select WiFi Network:");
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < display_count; i++) {
         lv_obj_t *btn = lv_list_add_button(wifi_list, LV_SYMBOL_WIFI, WiFi.SSID(i).c_str());
         lv_obj_add_event_cb(btn, wifi_item_event_handler, LV_EVENT_CLICKED, NULL);
     }
+    WiFi.scanDelete();
 }
+
 /**
  Scan WiFi and update the UI.
  Runs in the background to avoid blocking loop()/LVGL.
@@ -70,9 +76,14 @@ void update_wifi_list_ui(void *scan_result)
 */
 void wifi_scan_task(void *pvParameters)
 {   
-    /** Skip WiFi.mode(WIFI_STA) when already connected to avoid resetting connection */
+    
+    if (WiFi.getMode() != WIFI_STA) {
+    WiFi.mode(WIFI_STA);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
     if (WiFi.status() != WL_CONNECTED) {
-        WiFi.mode(WIFI_STA);
+        WiFi.disconnect();
         vTaskDelay(pdMS_TO_TICKS(100));
     }
     WiFi.scanNetworks(true); // async
