@@ -21,9 +21,9 @@
 static uint32_t draw_buf[DRAW_BUF_SIZE / 4];
 /* Touch config */
 #define XPT2046_IRQ 36
-#define XPT2046_MOSI 13
-#define XPT2046_MISO 4
-#define XPT2046_CLK 14
+#define XPT2046_MOSI 32
+#define XPT2046_MISO 39
+#define XPT2046_CLK 25
 #define XPT2046_CS 33
 
 static SPIClass tsSpi = SPIClass(VSPI);
